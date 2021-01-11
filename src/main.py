@@ -1,9 +1,11 @@
 from fastapi import FastAPI
 import pandas as pd
-from pandas_datareader import data
+import uvicorn
+from pandas_datareader import data as web
 import matplotlib.pyplot as plt
 from typing import Dict
 import datetime
+import json
 
 app = FastAPI()
 
@@ -13,13 +15,31 @@ async def root():
 
 @app.post("/get_data/{ticker}")
 async def get_data(ticker: str, dates: Dict[str, str]):
+    print(ticker)
 
-    adj_close = data.DataReader(
+    adj_close = web.DataReader(
         ticker, 
         start = dates["start_date"],
         end = dates["end_date"],
         data_source = 'yahoo'
     )['Adj Close']
+    print(adj_close)
+
+    return {"data": adj_close}
+
+
+@app.post("/get_data/selected_assets/{assets}")
+async def get_full_data(assets: str, data: Dict[str, str, str]):
+
+    assets = json.loads(assets)
+
+    for ticker in assets:
+        adj_close[ticker.split('.')[0]] = web.DataReader(
+            ticker, 
+            start = dates["start_date"],
+            end = dates["end_date"],
+            data_source = 'yahoo'
+        )['Adj Close']
 
     return {"data": adj_close}
 
