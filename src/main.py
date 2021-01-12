@@ -29,7 +29,7 @@ async def get_data(ticker: str, dates: Dict[str, str]):
 
 
 @app.post("/get_data/selected_assets/{assets}")
-async def get_full_data(assets: str, data: Dict[str, str, str]):
+async def get_full_data(assets: str, data: Dict[str, str]):
 
     assets = json.loads(assets)
 

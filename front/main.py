@@ -5,6 +5,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import datetime
 import json
+import plotly.express as px
+import plotly.graph_objects as go
 
 
 ASSETS = {
@@ -47,23 +49,26 @@ if st.button("Plot Asset"):
         df.index = pd.to_datetime(df.index)
         df = df.reset_index()
         df.columns = ["Date", "Adj_close"]
-        fig, ax = plt.subplots()
-        sns.lineplot(data=df, x='Date', y='Adj_close')
-        #df.plot()
-        st.pyplot(fig)
+        #fig = px.line(df, x='Date', y="Adj_close")
+        fig = go.Figure(
+            [
+                go.Scatter(
+                    x=df['Date'], 
+                    y=df['Adj_close']
+                )
+            ]
+        )
+        st.plotly_chart(fig)
 
 # displays a button
 if st.button("Get all data"):
-    if ticker is not None:
-        res = requests.post(f"http://localhost:8000/get_data/get_full_data/{json.dumps(selected_assets)}", json=payload)
-        data = res.json()["data"]
-        print(data)
-
-        # df = pd.DataFrame.from_dict(data, orient="index")
-        # df.index = pd.to_datetime(df.index)
-        # df = df.reset_index()
-        # df.columns = ["Date", "Adj_close"]
-        # fig, ax = plt.subplots()
-        # sns.lineplot(data=df, x='Date', y='Adj_close')
-        # #df.plot()
-        # st.pyplot(fig)
+    df_full = pd.DataFrame()
+    for ticker in selected_assets:
+        if ticker is not None:
+            res = requests.post(f"http://localhost:8000/get_data/{ticker}", json=payload)
+            data = res.json()["data"]
+            df = pd.DataFrame.from_dict(data, orient="index")
+            df.index = pd.to_datetime(df.index)
+            df.columns = [ticker]
+        df_full = pd.concat([df_full, df], axis=1)
+    print(df_full.head())
