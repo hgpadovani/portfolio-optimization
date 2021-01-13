@@ -148,17 +148,19 @@ class Markowitz(object):
 
         weights_sharpe_df = pd.DataFrame(dict(zip(self.assets, weights_sharpe)), index=["Max Sharpe"])
         weights_return_df = pd.DataFrame(dict(zip(self.assets, weights_return)), index=["Max Return"])
-        weights_risk_df = pd.DataFrame(dict(zip(self.assets, weights_risk)), index=["Min Risk"])
+        weights_risk_df = pd.DataFrame(dict(zip(self.assets, weights_risk)), index=["Min Volatility"])
 
         stats_sharpe_df = pd.DataFrame(stats_sharpe, index=["Max Sharpe"])
         stats_return_df = pd.DataFrame(stats_return, index=["Max Return"])
-        stats_risk_df = pd.DataFrame(stats_risk, index=["Min Risk"])
+        stats_risk_df = pd.DataFrame(stats_risk, index=["Min Volatility"])
 
         sharpe_df = pd.concat([weights_sharpe_df, stats_sharpe_df], axis=1)
         return_df = pd.concat([weights_return_df, stats_return_df], axis=1)
         risk_df = pd.concat([weights_risk_df, stats_risk_df], axis=1)
 
         final_df = pd.concat([sharpe_df, return_df, risk_df], axis=0)
+        for stats in ["return", "volatility"]:
+            final_df[stats] = final_df[stats].apply(lambda x: round(100*x, 4))
 
         # Getting simulated portfolios
         port_returns, port_vols = self.portfolio_simulation()
@@ -192,7 +194,7 @@ class Markowitz(object):
         minimal_volatilities = np.array(minimal_volatilities)
 
         # initialize figure size
-        fig = plt.figure(figsize=(14,6))
+        fig = plt.figure(figsize=(18, 12))
 
         # Plotting portfolios
         plt.scatter(port_vols,
