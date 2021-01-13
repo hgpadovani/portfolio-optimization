@@ -56,16 +56,8 @@ if st.button("Optimize Portfolio!"):
             df.index = pd.to_datetime(df.index)
             df.columns = [ticker]
         df_full = pd.concat([df_full, df], axis=1)
-        # fig.add_trace(
-        #     go.Scatter(
-        #         x=df_full.index, 
-        #         y=df_full[ticker],
-        #         name=ticker
-        #     )
-        # )
-    #fig = df_full.plot(title="Stocks")
+
     fig = px.line(df_full, y=selected_assets)
-    #fig.update_layout(title="Stocks")
     st.markdown("## Visualizing Stocks")
     st.plotly_chart(fig)
 
@@ -77,5 +69,4 @@ if st.button("Optimize Portfolio!"):
     st.dataframe(final_df)
 
     st.markdown("## The Efficient Frontier")
-    #st.pyplot(fig)
     st.plotly_chart(fig)
