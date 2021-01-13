@@ -19,7 +19,7 @@ ASSETS = {
 st.set_option("deprecation.showfileUploaderEncoding", False)
 
 st.title("Portfolio Optimization")
-st.write("Disclaimer: This is an educational content only. This IS NOT a official recommendation. Investing with this will be solely at your own risk.")
+st.write("Disclaimer: This is an educational content only. This IS NOT an official recommendation. Investing with this will be solely at your own risk.")
 st.write("Portfolio optimization via Markowitz Efficient Frontier")
 
 # User input value
@@ -77,4 +77,5 @@ if st.button("Optimize Portfolio!"):
     st.dataframe(final_df)
 
     st.markdown("## The Efficient Frontier")
-    st.pyplot(fig)
+    #st.pyplot(fig)
+    st.plotly_chart(fig)

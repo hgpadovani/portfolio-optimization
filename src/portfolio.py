@@ -146,19 +146,15 @@ class Markowitz(object):
         weights_return, stats_return = self.portfolio_optimization(self.maximize_return, constraints, bounds, initializer)
         weights_risk, stats_risk = self.portfolio_optimization(self.minimize_volatility, constraints, bounds, initializer)
 
-        weights_sharpe_df = pd.DataFrame(dict(zip(self.assets, weights_sharpe)), index=["Max Sharpe"])
-        weights_return_df = pd.DataFrame(dict(zip(self.assets, weights_return)), index=["Max Return"])
-        weights_risk_df = pd.DataFrame(dict(zip(self.assets, weights_risk)), index=["Min Volatility"])
+        sharpe_dict = {**dict(zip(self.assets, weights_sharpe)), **stats_sharpe}
+        return_dict = {**dict(zip(self.assets, weights_return)), **stats_return}
+        risk_dict = {**dict(zip(self.assets, weights_risk)), **stats_risk}
 
-        stats_sharpe_df = pd.DataFrame(stats_sharpe, index=["Max Sharpe"])
-        stats_return_df = pd.DataFrame(stats_return, index=["Max Return"])
-        stats_risk_df = pd.DataFrame(stats_risk, index=["Min Volatility"])
+        max_sharpe = pd.DataFrame(sharpe_dict, index=["Max Sharpe"])
+        max_return = pd.DataFrame(return_dict, index=["Max Return"])
+        min_risk = pd.DataFrame(risk_dict, index=["Min Volatility"])
 
-        sharpe_df = pd.concat([weights_sharpe_df, stats_sharpe_df], axis=1)
-        return_df = pd.concat([weights_return_df, stats_return_df], axis=1)
-        risk_df = pd.concat([weights_risk_df, stats_risk_df], axis=1)
-
-        final_df = pd.concat([sharpe_df, return_df, risk_df], axis=0)
+        final_df = pd.concat([max_sharpe, max_return, min_risk], axis=0)
         for stats in ["return", "volatility"]:
             final_df[stats] = final_df[stats].apply(lambda x: round(100*x, 4))
 
@@ -193,32 +189,55 @@ class Markowitz(object):
 
         minimal_volatilities = np.array(minimal_volatilities)
 
-        # initialize figure size
-        fig = plt.figure(figsize=(18, 12))
+        fig = go.Figure(
+            go.Scatter(
+                x = port_vols,
+                y = port_returns,
+                mode = 'markers',
+                marker_color = (port_returns / port_vols),
+                marker = dict(colorscale='Viridis', showscale=True, colorbar=dict(len=0.5)),
+                name = "Simulated Portfolios"
+            )
+        )
 
-        # Plotting portfolios
-        plt.scatter(port_vols,
-                    port_returns,
-                    c = (port_returns / port_vols),
-                    marker = 'o')
+        fig.add_trace(
+            go.Scatter(
+                x = minimal_volatilities,
+                y = target_returns,
+                mode = 'lines',
+                marker_color = "red",
+                line = dict(dash = 'dash'),
+                name = "Efficient Frontier"
+            )
+        )
 
-        # Plotting minimal volatility point
-        plt.plot(minimal_volatilities, target_returns,'r--', linewidth=3)
+        fig.add_trace(
+            go.Scatter(
+                x = [stats_sharpe['volatility']],
+                y = [stats_sharpe['return']],
+                mode = 'markers',
+                marker_color = "red",
+                marker = dict(size=16, symbol = "hexagram", showscale=True),
+                name = "Maximum Sharpe Ratio",
+            )
+        )
 
-        plt.scatter(stats_sharpe['volatility'],
-                    stats_sharpe['return'],
-                    marker = '*', color='r', s=500, label='Maximum Sharpe Ratio')
-
-        plt.scatter(stats_risk['volatility'],
-                    stats_risk['return'],
-                    marker = '*', color='g', s=500, label='Minimum Volatility')
-
-        plt.xlabel('Portfolio Volatility')
-        plt.ylabel('Portfolio Return')
-        plt.title("Efficient Frontier")
-        plt.grid()
-        plt.legend()
-        plt.colorbar(label='Sharpe ratio (not adjusted for short rate)')
+        fig.add_trace(
+            go.Scatter(
+                x = [stats_risk['volatility']],
+                y = [stats_risk['return']],
+                mode = 'markers',
+                marker_color = "green",
+                marker = dict(size=16, symbol = "hexagram", showscale=True),
+                name = "Minimum Volatility",
+            )
+        )
+        fig.update_layout(
+            xaxis_title = "Volatility",
+            yaxis_title = "Return",
+            width=800,
+            height=500,
+        )
 
         return final_df, fig
         
