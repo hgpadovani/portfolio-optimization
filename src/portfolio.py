@@ -72,19 +72,6 @@ class Markowitz(object):
     
         return port_returns, port_vols
 
-
-    def plot_simulations(self, port_returns, port_vols):
-        # Plot the distribution of portfolio returns and volatilities 
-        fig = plt.figure(figsize=(12,6))
-        plt.scatter(port_vols, port_returns,c = (port_returns / port_vols), marker='o')
-        plt.xlabel('Portfolio Volatility')
-        plt.ylabel('Portfolio Return')
-        plt.grid()
-        plt.colorbar(label = 'Sharpe ratio (not adjusted for short rate)')    
-        #print('Elapsed Time: %.2f seconds' % (time.time() - start))
-        
-        return fig
-
     def get_portfolio_stats(self, weights):
         '''
         We can gather the portfolio performance metrics for a specific set of weights.
@@ -141,14 +128,9 @@ class Markowitz(object):
         
         # Getting optimal weights for each asset
         optimal_weights = optimal_result['x'].round(4)
-        st.write('Optimal weights by asset:')
-        st.write(tabulate(list(zip(self.assets,list(optimal_weights)))))
         
         # Getting optimal portfolio stats
         optimal_stats = self.get_portfolio_stats(optimal_weights)
-        st.write('Optimal Portfolio Return: ', round(optimal_stats['return']*100,4))
-        st.write('Optimal Portfolio Volatility: ', round(optimal_stats['volatility']*100,4))
-        st.write('Optimal Portfolio Sharpe Ratio: ', round(optimal_stats['sharpe'],4))
         
         return optimal_weights, optimal_stats
 
@@ -160,12 +142,23 @@ class Markowitz(object):
         initializer = self.n_assets * [1./self.n_assets,]
 
         # Optimizing to efficient frontier
-        st.title("Portfolio for Minimum Sharpe Ratio")
         weights_sharpe, stats_sharpe = self.portfolio_optimization(self.minimize_sharpe, constraints, bounds, initializer)
-        st.title("Portfolio for Maximum Returns")
         weights_return, stats_return = self.portfolio_optimization(self.maximize_return, constraints, bounds, initializer)
-        st.title("Portfolio for Minimum Volatility")
         weights_risk, stats_risk = self.portfolio_optimization(self.minimize_volatility, constraints, bounds, initializer)
+
+        weights_sharpe_df = pd.DataFrame(dict(zip(self.assets, weights_sharpe)), index=["Max Sharpe"])
+        weights_return_df = pd.DataFrame(dict(zip(self.assets, weights_return)), index=["Max Return"])
+        weights_risk_df = pd.DataFrame(dict(zip(self.assets, weights_risk)), index=["Min Risk"])
+
+        stats_sharpe_df = pd.DataFrame(stats_sharpe, index=["Max Sharpe"])
+        stats_return_df = pd.DataFrame(stats_return, index=["Max Return"])
+        stats_risk_df = pd.DataFrame(stats_risk, index=["Min Risk"])
+
+        sharpe_df = pd.concat([weights_sharpe_df, stats_sharpe_df], axis=1)
+        return_df = pd.concat([weights_return_df, stats_return_df], axis=1)
+        risk_df = pd.concat([weights_risk_df, stats_risk_df], axis=1)
+
+        final_df = pd.concat([sharpe_df, return_df, risk_df], axis=0)
 
         # Getting simulated portfolios
         port_returns, port_vols = self.portfolio_simulation()
@@ -220,10 +213,11 @@ class Markowitz(object):
 
         plt.xlabel('Portfolio Volatility')
         plt.ylabel('Portfolio Return')
+        plt.title("Efficient Frontier")
         plt.grid()
         plt.legend()
         plt.colorbar(label='Sharpe ratio (not adjusted for short rate)')
 
-        return fig
+        return final_df, fig
         
     

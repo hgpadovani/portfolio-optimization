@@ -65,12 +65,16 @@ if st.button("Optimize Portfolio!"):
         # )
     #fig = df_full.plot(title="Stocks")
     fig = px.line(df_full, y=selected_assets)
-    fig.update_layout(title="Stocks")
+    #fig.update_layout(title="Stocks")
+    st.markdown("## Visualizing Stocks")
     st.plotly_chart(fig)
 
     # Initializing Markowitz Portfolio Optimization
     mk = Markowitz(df_full, selected_assets, value_to_invest)
-    fig = mk.plot_efficient_frontier()
+    final_df, fig = mk.plot_efficient_frontier()
 
-    st.title("The Efficient Frontier")
+    st.markdown("## Optimal Allocation")
+    st.dataframe(final_df)
+
+    st.markdown("## The Efficient Frontier")
     st.pyplot(fig)
