@@ -23,23 +23,6 @@ async def get_data(ticker: str, dates: Dict[str, str]):
         end = dates["end_date"],
         data_source = 'yahoo'
     )['Adj Close']
-    print(adj_close)
-
-    return {"data": adj_close}
-
-
-@app.post("/get_data/selected_assets/{assets}")
-async def get_full_data(assets: str, data: Dict[str, str]):
-
-    assets = json.loads(assets)
-
-    for ticker in assets:
-        adj_close[ticker.split('.')[0]] = web.DataReader(
-            ticker, 
-            start = dates["start_date"],
-            end = dates["end_date"],
-            data_source = 'yahoo'
-        )['Adj Close']
 
     return {"data": adj_close}
 
