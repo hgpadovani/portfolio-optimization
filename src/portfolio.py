@@ -12,11 +12,12 @@ import streamlit as st
 
 class Markowitz(object):
 
-    def __init__(self, df, assets, iterations, risk_free_rate=0.2):
+    def __init__(self, df, assets, iterations, min_value, risk_free_rate=0.2):
         self.df = df
         self.assets = assets
         self.n_assets = len(self.assets)
         self.iterations = iterations
+        self.min_value = min_value
         self.risk_free_rate = risk_free_rate
 
     def rand_weights(self, n):
@@ -138,7 +139,7 @@ class Markowitz(object):
 
         # Initializing parameters for optimization
         constraints = ({'type' : 'eq', 'fun': lambda x: np.sum(x) -1})
-        bounds = tuple((0.1,1) for x in range(self.n_assets))
+        bounds = tuple((self.min_value, 1) for x in range(self.n_assets))
         initializer = self.n_assets * [1./self.n_assets,]
 
         # Optimizing to efficient frontier
@@ -167,7 +168,7 @@ class Markowitz(object):
 
         # Initialize optimization parameters
         minimal_volatilities = []
-        bounds = tuple((0.1, 1) for x in range(self.n_assets))
+        bounds = tuple((self.min_value, 1) for x in range(self.n_assets))
         initializer = self.n_assets * [1./self.n_assets,]
 
         for target_return in target_returns:
@@ -189,13 +190,14 @@ class Markowitz(object):
 
         minimal_volatilities = np.array(minimal_volatilities)
 
+        # Plotting efficient frontier
         fig = go.Figure(
             go.Scatter(
                 x = port_vols,
                 y = port_returns,
                 mode = 'markers',
                 marker_color = (port_returns / port_vols),
-                marker = dict(colorscale='Viridis', showscale=True, colorbar=dict(len=0.5)),
+                marker = dict(colorscale='Viridis', showscale=True),
                 name = "Simulated Portfolios"
             )
         )
@@ -217,7 +219,7 @@ class Markowitz(object):
                 y = [stats_sharpe['return']],
                 mode = 'markers',
                 marker_color = "red",
-                marker = dict(size=16, symbol = "hexagram", showscale=True),
+                marker = dict(size=16, symbol = "hexagram", showscale=False),
                 name = "Maximum Sharpe Ratio",
             )
         )
@@ -228,7 +230,7 @@ class Markowitz(object):
                 y = [stats_risk['return']],
                 mode = 'markers',
                 marker_color = "green",
-                marker = dict(size=16, symbol = "hexagram", showscale=True),
+                marker = dict(size=16, symbol = "hexagram", showscale=False),
                 name = "Minimum Volatility",
             )
         )
@@ -236,7 +238,8 @@ class Markowitz(object):
             xaxis_title = "Volatility",
             yaxis_title = "Return",
             width=800,
-            height=500,
+            height=600,
+            legend_orientation="h"
         )
 
         return final_df, fig

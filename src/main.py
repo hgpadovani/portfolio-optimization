@@ -14,13 +14,12 @@ async def root():
     return {"message": "Hello World"}
 
 @app.post("/get_data/{ticker}")
-async def get_data(ticker: str, dates: Dict[str, str]):
-    print(ticker)
-
+async def get_data(ticker: str, payload: Dict[str, str]):
+    ticker = str(ticker)+".SA"
     adj_close = web.DataReader(
         ticker, 
-        start = dates["start_date"],
-        end = dates["end_date"],
+        start = payload["start_date"],
+        end = payload["end_date"],
         data_source = 'yahoo'
     )['Adj Close']
 
